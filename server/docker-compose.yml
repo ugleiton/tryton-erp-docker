@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+  # POSTGRES -----------------------------------------------------------------------------------
+  postgres:
+    container_name: 
+      "postgres"
+    image: 
+      "postgres"
+    restart: 
+      "always"
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER: tryton
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: tryton
+    #volumes:
+    #  - ./postgres/data:/var/lib/postgresql/data
+      
+  # PGADMIN -------------------------------------------------------------------------------------
+  pgadmin:
+    container_name:
+      "pgadmin"
+    image: dpage/pgadmin4
+    restart: 
+      "always"
+    ports:
+      - "80:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "ugleiton@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASS}
+    depends_on:
+      - postgres
+
+  tryton-install:
+    container_name:
+      "tryton-install"
+    restart: 'no'
+    image: tryton/tryton
+    environment:
+      TRYTOND_DATABASE_URI: postgresql://tryton:${DB_PASS}@postgres:5432/
+      TRYTOND_DATABASES: tryton
+    command: tail -f /dev/null
+    # docker exec -it tryton-install bash
+    # $ trytond-admin -d tryton --all
+    # https://discuss.tryton.org/t/docker-image-step-by-step-instructions/1238 
+  
+  #TRYTON SERVER  ----------------------------------------------------------------------------------
+  tryton:
+    container_name:
+      "tryton"
+    image: "tryton/tryton"
+    restart: 
+      "always"
+    ports:
+      - "8000:8000"
+    environment:
+      TRYTOND_DATABASE_URI: postgresql://tryton:${DB_PASS}@postgres:5432/
+      TRYTOND_DATABASE_PATH: /var/lib/trytond
+      TRYTOND_DATABASES: tryton
+      TRYTOND_WEB_LISTEN: 0.0.0.0:8000    
+    depends_on:
+      - postgres
