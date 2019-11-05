@@ -15,8 +15,8 @@ services:
       POSTGRES_USER: tryton
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: tryton
-    #volumes:
-    #  - ./postgres/data:/var/lib/postgresql/data
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
       
   # PGADMIN -------------------------------------------------------------------------------------
   pgadmin:
@@ -33,6 +33,7 @@ services:
     depends_on:
       - postgres
 
+  #TRYTON SERVER  ----------------------------------------------------------------------------------
   tryton-install:
     container_name:
       "tryton-install"
@@ -46,7 +47,19 @@ services:
     # $ trytond-admin -d tryton --all
     # https://discuss.tryton.org/t/docker-image-step-by-step-instructions/1238 
   
-  #TRYTON SERVER  ----------------------------------------------------------------------------------
+  tryton-cron:
+    container_name:
+      "tryton-cron"
+    image: "tryton/tryton"
+    restart: 
+      "always"
+    environment:
+      TRYTOND_DATABASE_URI: postgresql://tryton:${DB_PASS}@postgres:5432/
+      TRYTOND_DATABASES: tryton
+    depends_on:
+      - postgres
+    command: trytond-cron -d tryton
+  
   tryton:
     container_name:
       "tryton"
